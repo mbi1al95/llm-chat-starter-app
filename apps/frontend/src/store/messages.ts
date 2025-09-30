@@ -7,6 +7,9 @@ interface MessagesState {
   addMessage: (message: Message) => void;
   updateLastMessage: (content: string) => void;
   clearMessages: () => void;
+  setMessages: (messages: Message[]) => void;
+  conversationId: string | null;
+  setConversationId: (id: string | null) => void;
 }
 
 export const useMessages = create<MessagesState>((set) => ({
@@ -22,4 +25,7 @@ export const useMessages = create<MessagesState>((set) => ({
       ),
     })),
   clearMessages: () => set({ messages: [] }),
+  setMessages: (messages) => set({ messages }),
+  conversationId: null,
+  setConversationId: (id) => set({ conversationId: id }),
 }));

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMessages } from "@/store/messages";
+import { useConversations } from "@/store/conversations";
+import { fetchConversationById } from "@/api/conversations";
 
 interface ChatInputProps {
   onTypingChange: (isTyping: boolean) => void;
@@ -12,7 +14,8 @@ interface ChatInputProps {
 export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { messages, addMessage, updateLastMessage } = useMessages();
+  const { messages, addMessage, updateLastMessage, conversationId, setConversationId } = useMessages();
+  const { upsertConversation } = useConversations();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus input when loading state changes to false
@@ -50,6 +53,7 @@ export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          conversationId,
           messages: [...messages, { role: "user", content: input }],
         }),
       });
@@ -70,12 +74,26 @@ export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n");
 
-        for (const line of lines) {
+        for (const line of lines)
+        {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.content) {
                 updateLastMessage(data.content);
+              }
+              if (data.conversationId) {
+                // set state for conversationId through store
+                setConversationId(data.conversationId);
+                // upsert sidebar through store
+                fetchConversationById(data.conversationId).then((conversation: any) => {
+                  upsertConversation({
+                    id: conversation.id,
+                    title: conversation.title,
+                    lastMessage: conversation.lastMessage,
+                  });
+                })
+                .catch((err) => console.error("Failed to fetch conversation", err));
               }
             } catch (e) {
               console.error("Error parsing SSE data:", e);

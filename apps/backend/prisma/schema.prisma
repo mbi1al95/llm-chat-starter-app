@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Conversation {
+  id           String   @id @default(cuid())
+  title        String
+  messages     Json     @default("[]")  // JSON array for Conversation
+  messageCount Int      @default(0)
+  lastMessage  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

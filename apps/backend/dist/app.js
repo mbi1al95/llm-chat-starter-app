@@ -2,30 +2,20 @@ import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { OpenAI } from "openai";
-import ApiRouter from "./routes.js";
-
-// import { zValidator } from "@hono/zod-validator";
-// import { streamSSE } from "hono/streaming";
-// import { z } from "zod";
-// import { OpenAIConfig } from "./config/index.js";
-// // Create OpenAI client
-// const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY, // Set this in your .env file
-// });
-
-
+import conversationRouter from "./routes/conversationRoutes.js";
+import chatRouter from "./routes/chatRouter.js";
+// Create OpenAI client
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Set this in your .env file
+});
 // Create Hono app
 export const app = new Hono();
-
 // Middleware
 app.use(cors());
-
 // Routes
-app.get("/api/", (c) => {
-  return c.json({ message: "LLM API is running" });
+app.get("/", (c) => {
+    return c.json({ message: "LLM API is running" });
 });
-app.route("/api", ApiRouter);
-
 // Chat endpoint
 // app.post(
 //   "/api/chat",
@@ -43,18 +33,15 @@ app.route("/api", ApiRouter);
 //   async (c) => {
 //     try {
 //       const { messages } = c.req.valid("json");
-
 //       if (!messages?.length) {
 //         return c.json({ error: "Messages are required" }, 400);
 //       }
-
 //       const aiStream = await openai.chat.completions.create({
 //         model: "gpt-4o-mini",
 //         messages,
 //         temperature: 0.7,
 //         stream: true,
 //       });
-
 //       return streamSSE(c, async (stream) => {
 //         for await (const chunk of aiStream) {
 //           const content = chunk.choices[0]?.delta?.content || "";
@@ -71,4 +58,5 @@ app.route("/api", ApiRouter);
 //     }
 //   }
 // );
-
+app.route("/api/chat", chatRouter);
+app.route('/api/conversations', conversationRouter);
